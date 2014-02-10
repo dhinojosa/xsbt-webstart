@@ -24,9 +24,11 @@ object WebStartPlugin extends Plugin {
 	)
 	
 	case class JnlpConfig(
-		fileName:String, 
-		descriptor:(String,Seq[JnlpAsset])=>Elem
-	)
+		fileName:String,
+    codeBase:String,
+		descriptor:(String,String,Seq[JnlpAsset])=>Elem) {
+    def this(fileName:String, descriptor:(String,String,Seq[JnlpAsset])=>Elem) = this(fileName, "$$codebase", descriptor)
+  }
 	
 	case class JnlpAsset(href:String, main:Boolean, size:Long) {
 		def toElem:Elem	= <jar href={href} main={main.toString} size={size.toString}/> 
@@ -136,7 +138,7 @@ object WebStartPlugin extends Plugin {
 				}
 		val configFiles:Seq[(JnlpConfig,File)]	= jnlpConfigs map { it => (it, output / it.fileName) }
 		configFiles foreach { case (jnlpConfig, jnlpFile) =>
-			val xml:Elem	= jnlpConfig descriptor (jnlpConfig.fileName, sortedAssets)
+			val xml:Elem	= jnlpConfig descriptor (jnlpConfig.fileName, jnlpConfig.codeBase, sortedAssets)
 			val str:String	= """<?xml version="1.0" encoding="utf-8"?>""" + "\n" + xml
 			IO write (jnlpFile, str)
 		}
